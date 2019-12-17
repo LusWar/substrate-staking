@@ -1,12 +1,12 @@
 [package]
-name = "node-template"
-version = "2.0.0"
-authors = ["Anonymous"]
+name = "staking-node"
+version = "0.0.1"
+authors = ["luswar"]
 build = "build.rs"
 edition = "2018"
 
 [[bin]]
-name = "node-template"
+name = "staking-node"
 path = "src/main.rs"
 
 [dependencies]
@@ -33,7 +33,7 @@ sp-consensus = { git = "https://github.com/paritytech/substrate.git" }
 grandpa = { package = "sc-finality-grandpa", git = "https://github.com/paritytech/substrate.git" }
 grandpa-primitives = { package = "sp-finality-grandpa", git = "https://github.com/paritytech/substrate.git" }
 sc-client = {  git = "https://github.com/paritytech/substrate.git" }
-node-template-runtime = { git = "https://github.com/paritytech/substrate.git" }
+staking-node-runtime = { path = "runtime" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git" }
 sc-basic-authority = { git = "https://github.com/paritytech/substrate.git" }
 

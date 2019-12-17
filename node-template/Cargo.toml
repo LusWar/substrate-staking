@@ -18,25 +18,25 @@ tokio = "0.1.22"
 parking_lot = "0.9.0"
 codec = { package = "parity-scale-codec", version = "1.0.0" }
 trie-root = "0.15.2"
-sp-io = { path = "../../primitives/io" }
-sc-cli = { path = "../../client/cli" }
-sp-core = { path = "../../primitives/core" }
-sc-executor = { path = "../../client/executor" }
-sc-service = { path = "../../client/service" }
-sp-inherents = { path = "../../primitives/inherents" }
-sc-transaction-pool = { path = "../../client/transaction-pool" }
-sp-transaction-pool = { path = "../../primitives/transaction-pool" }
-sc-network = { path = "../../client/network" }
-sc-consensus-aura = { path = "../../client/consensus/aura" }
-sp-consensus-aura = { path = "../../primitives/consensus/aura" }
-sp-consensus = { path = "../../primitives/consensus/common" }
-grandpa = { package = "sc-finality-grandpa", path = "../../client/finality-grandpa" }
-grandpa-primitives = { package = "sp-finality-grandpa", path = "../../primitives/finality-grandpa" }
-sc-client = {  path = "../../client/" }
-node-template-runtime = { path = "runtime" }
-sp-runtime = { path = "../../primitives/runtime" }
-sc-basic-authority = { path  = "../../client/basic-authorship"}
+sp-io = { git = "https://github.com/paritytech/substrate.git" }
+sc-cli = { git = "https://github.com/paritytech/substrate.git" }
+sp-core = { git = "https://github.com/paritytech/substrate.git" }
+sc-executor = { git = "https://github.com/paritytech/substrate.git" }
+sc-service = { git = "https://github.com/paritytech/substrate.git" }
+sp-inherents = { git = "https://github.com/paritytech/substrate.git" }
+sc-transaction-pool = { git = "https://github.com/paritytech/substrate.git" }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate.git" }
+sc-network = { git = "https://github.com/paritytech/substrate.git" }
+sc-consensus-aura = { git = "https://github.com/paritytech/substrate.git" }
+sp-consensus-aura = { git = "https://github.com/paritytech/substrate.git" }
+sp-consensus = { git = "https://github.com/paritytech/substrate.git" }
+grandpa = { package = "sc-finality-grandpa", git = "https://github.com/paritytech/substrate.git" }
+grandpa-primitives = { package = "sp-finality-grandpa", git = "https://github.com/paritytech/substrate.git" }
+sc-client = {  git = "https://github.com/paritytech/substrate.git" }
+node-template-runtime = { git = "https://github.com/paritytech/substrate.git" }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git" }
+sc-basic-authority = { git = "https://github.com/paritytech/substrate.git" }
 
 [build-dependencies]
 vergen = "3.0.4"
-build-script-utils = { package = "substrate-build-script-utils", path = "../../utils/build-script-utils" }
+build-script-utils = { package = "substrate-build-script-utils", git = "https://github.com/paritytech/substrate.git" }

@@ -5,6 +5,12 @@ authors = ["luswar"]
 build = "build.rs"
 edition = "2018"
 
+[profile.release]
+panic = "unwind"
+
+[workspace]
+members = [ "runtime" ]
+
 [[bin]]
 name = "staking-node"
 path = "src/main.rs"

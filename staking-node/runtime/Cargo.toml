@@ -5,6 +5,7 @@ authors = ["luswar"]
 edition = "2018"
 
 [dependencies]
+#rev=ab4aca33fde8ecd0803771e289e97dec74291e82
 aura = { package = "pallet-aura", git = "https://github.com/paritytech/substrate.git", default-features = false }
 balances = { package = "pallet-balances", git = "https://github.com/paritytech/substrate.git", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate.git", default-features = false }
@@ -32,6 +33,14 @@ sp-session = { git = "https://github.com/paritytech/substrate.git", default-feat
 sp-std = { git = "https://github.com/paritytech/substrate.git", default-features = false }
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate.git", default-features = false }
 sp-version = { git = "https://github.com/paritytech/substrate.git", default-features = false }
+sp-staking = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+
+pallet-staking = { version = "2.0.0", features = ["migrate"], git = "https://github.com/paritytech/substrate.git", default-features = false }
+pallet-staking-reward-curve = { version = "2.0.0",  git = "https://github.com/paritytech/substrate.git" }
+pallet-session = { version = "2.0.0", features = ["historical"], git = "https://github.com/paritytech/substrate.git", default-features = false }
+pallet-babe = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+node-primitives = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+pallet-im-online = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 
 [build-dependencies]
 wasm-builder-runner = { package = "substrate-wasm-builder-runner", git = "https://github.com/paritytech/substrate.git", version = "1.0.4" }
@@ -57,6 +66,11 @@ std = [
 	"sp-io/std",
 	"sp-offchain/std",
 	"sp-runtime/std",
+	"pallet-babe/std",
+	"pallet-im-online/std",
+	"sp-staking/std",
+	"pallet-staking/std",
+	"pallet-session/std",
 	"sp-session/std",
 	"sp-std/std",
 	"sp-transaction-pool/std",

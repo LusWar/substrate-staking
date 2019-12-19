@@ -43,6 +43,7 @@ staking-node-runtime = { path = "runtime" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git" }
 sc-basic-authority = { git = "https://github.com/paritytech/substrate.git" }
 
+
 [build-dependencies]
 vergen = "3.0.4"
 build-script-utils = { package = "substrate-build-script-utils", git = "https://github.com/paritytech/substrate.git" }

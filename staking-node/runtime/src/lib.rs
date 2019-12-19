@@ -3,6 +3,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit="256"]
+use sp_runtime::curve::PiecewiseLinear;
+use sp_runtime::traits::OpaqueKeys;
+use node_primitives::Moment;
 
 // Make the WASM binary available.
 #[cfg(feature = "std")]
@@ -15,7 +18,7 @@ use sp_runtime::{
 	impl_opaque_keys, MultiSignature
 };
 use sp_runtime::traits::{
-	NumberFor, BlakeTwo256, Block as BlockT, StaticLookup, Verify, ConvertInto, IdentifyAccount
+	NumberFor, BlakeTwo256, Block as BlockT, StaticLookup, Convert, Verify, ConvertInto, IdentifyAccount
 };
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -36,6 +39,14 @@ pub use frame_support::{
 	traits::Randomness,
 	weights::Weight,
 };
+pub use pallet_staking::StakerStatus;
+use system::offchain::TransactionSubmitter;
+use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
+
+
+pub mod constants;
+use constants::time::*;
+
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -229,6 +240,119 @@ impl sudo::Trait for Runtime {
 }
 
 
+/// Struct that handles the conversion of Balance -> `u64`. This is used for staking's election
+/// calculation.
+pub struct CurrencyToVoteHandler;
+
+impl CurrencyToVoteHandler {
+	fn factor() -> Balance { (Balances::total_issuance() / u64::max_value() as Balance).max(1) }
+}
+
+impl Convert<Balance, u64> for CurrencyToVoteHandler {
+	fn convert(x: Balance) -> u64 { (x / Self::factor()) as u64 }
+}
+
+impl Convert<u128, Balance> for CurrencyToVoteHandler {
+	fn convert(x: u128) -> Balance { x * Self::factor() }
+}
+
+parameter_types! {
+	pub const EpochDuration: u64 = EPOCH_DURATION_IN_SLOTS;
+	pub const ExpectedBlockTime: Moment = MILLISECS_PER_BLOCK;
+}
+
+impl pallet_babe::Trait for Runtime {
+	type EpochDuration = EpochDuration;
+	type ExpectedBlockTime = ExpectedBlockTime;
+	type EpochChangeTrigger = pallet_babe::ExternalTrigger;
+}
+
+type SubmitTransaction = TransactionSubmitter<ImOnlineId, Runtime, UncheckedExtrinsic>;
+
+
+parameter_types! {
+	pub const SessionDuration: BlockNumber = EPOCH_DURATION_IN_SLOTS as _;
+}
+
+impl pallet_im_online::Trait for Runtime {
+	type AuthorityId = ImOnlineId;
+	type Call = Call;
+	type Event = Event;
+	type SubmitTransaction = SubmitTransaction;
+	type ReportUnresponsiveness = ();
+	type SessionDuration = SessionDuration;
+}
+
+parameter_types! {
+	pub const Period: BlockNumber = 1;
+	pub const Offset: BlockNumber = 0;
+	pub const UncleGenerations: u64 = 0;
+	pub const DisabledValidatorsThreshold: Perbill = Perbill::from_percent(25);
+}
+
+
+impl_opaque_keys! {
+	pub struct SessionKeys {
+		pub grandpa: Grandpa,
+		pub babe: Babe,
+		pub im_online: ImOnline,
+		//pub authority_discovery: AuthorityDiscovery,
+	}
+}
+
+impl pallet_session::Trait for Runtime {
+	type OnSessionEnding = Staking;
+	type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+	type Event = Event;
+	type Keys = SessionKeys;
+	type ValidatorId = <Self as system::Trait>::AccountId;
+	type ValidatorIdOf = pallet_staking::StashOf<Self>;
+	type SelectInitialValidators = Staking;
+	type DisabledValidatorsThreshold = DisabledValidatorsThreshold;
+}
+impl pallet_session::historical::Trait for Runtime {
+	type FullIdentification = pallet_staking::Exposure<AccountId, Balance>;
+	type FullIdentificationOf = pallet_staking::ExposureOf<Runtime>;
+}
+
+
+pallet_staking_reward_curve::build! {
+	const REWARD_CURVE: PiecewiseLinear<'static> = curve!(
+		min_inflation: 0_025_000,
+		max_inflation: 0_100_000,
+		ideal_stake: 0_500_000,
+		falloff: 0_050_000,
+		max_piece_count: 40,
+		test_precision: 0_005_000,
+	);
+}
+
+parameter_types! {
+	pub const SessionsPerEra: sp_staking::SessionIndex = 6;
+	pub const BondingDuration: pallet_staking::EraIndex = 24*28;
+	pub const SlashDeferDuration: pallet_staking::EraIndex = 24 * 7; // 1/4 the bonding duration.
+	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
+}
+
+impl pallet_staking::Trait for Runtime {
+	type Currency = Balances;
+	type Time = Timestamp;
+	type CurrencyToVote = CurrencyToVoteHandler;
+	type RewardRemainder = ();
+	type Event = Event;
+	type Slash = (); // send the slashed funds to the treasury.
+	type Reward = (); // rewards are minted from the void
+	type SessionsPerEra = SessionsPerEra;
+	type BondingDuration = BondingDuration;
+	type SlashDeferDuration = SlashDeferDuration;
+	/// A super-majority of the council can cancel the slash.
+	type SlashCancelOrigin = system::EnsureRoot<Self::AccountId>;
+	type SessionInterface = Self;
+	type RewardCurve = RewardCurve;
+}
+
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -243,6 +367,9 @@ construct_runtime!(
 		Balances: balances::{default, Error},
 		TransactionPayment: transaction_payment::{Module, Storage},
 		Sudo: sudo,
+		Staking: pallet_staking::{default, OfflineWorker},
+		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
+		Babe: pallet_babe::{Module, Call, Storage, Config, Inherent(Timestamp)},
 
 		RandomnessCollectiveFlip: randomness_collective_flip::{Module, Call, Storage},
 	}

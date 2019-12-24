@@ -3,13 +3,13 @@
 use std::sync::Arc;
 use std::time::Duration;
 use sc_client::LongestChain;
-use staking_node_runtime::{self, GenesisConfig, opaque::Block, RuntimeApi};
+use node_primitives::Block;
+use staking_node_runtime::{self, GenesisConfig, RuntimeApi};
 use sc_service::{error::{Error as ServiceError}, AbstractService, Configuration, ServiceBuilder};
 use sp_inherents::InherentDataProviders;
 use sc_network::{construct_simple_protocol};
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
-use sp_consensus_aura::sr25519::{AuthorityPair as AuraPair};
 use grandpa::{self, FinalityProofProvider as GrandpaFinalityProofProvider};
 use sc_basic_authority;
 
@@ -35,7 +35,7 @@ macro_rules! new_full_start {
 		let inherent_data_providers = sp_inherents::InherentDataProviders::new();
 
 		let builder = sc_service::ServiceBuilder::new_full::<
-			staking_node_runtime::opaque::Block, staking_node_runtime::RuntimeApi, crate::service::Executor
+			node_primitives::Block, staking_node_runtime::RuntimeApi, crate::service::Executor
 		>($config)?
 			.with_select_chain(|_config, backend| {
 				Ok(sc_client::LongestChain::new(backend.clone()))
@@ -56,8 +56,8 @@ macro_rules! new_full_start {
 						client.clone(), &*client, select_chain
 					)?;
 
-				let import_queue = sc_consensus_aura::import_queue::<_, _, AuraPair, _>(
-					sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
+				let import_queue = sc_consensus_babe::import_queue::<_, _, AuraPair, _>(
+					sc_consensus_babe::SlotDuration::get_or_compute(&*client)?,
 					Box::new(grandpa_block_import.clone()),
 					Some(Box::new(grandpa_block_import.clone())),
 					None,
@@ -114,8 +114,8 @@ pub fn new_full<C: Send + Default + 'static>(config: Configuration<C, GenesisCon
 		let can_author_with =
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
-		let aura = sc_consensus_aura::start_aura::<_, _, _, _, _, AuraPair, _, _, _, _>(
-			sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
+		let aura = sc_consensus_babe::start_aura::<_, _, _, _, _, AuraPair, _, _, _, _>(
+			sc_consensus_babe::SlotDuration::get_or_compute(&*client)?,
 			client,
 			select_chain,
 			block_import,
@@ -220,8 +220,8 @@ pub fn new_light<C: Send + Default + 'static>(config: Configuration<C, GenesisCo
 			let finality_proof_request_builder =
 				finality_proof_import.create_finality_proof_request_builder();
 
-			let import_queue = sc_consensus_aura::import_queue::<_, _, AuraPair, ()>(
-				sc_consensus_aura::SlotDuration::get_or_compute(&*client)?,
+			let import_queue = sc_consensus_babe::import_queue::<_, _, AuraPair, ()>(
+				sc_consensus_babe::SlotDuration::get_or_compute(&*client)?,
 				Box::new(grandpa_block_import),
 				None,
 				Some(Box::new(finality_proof_import)),

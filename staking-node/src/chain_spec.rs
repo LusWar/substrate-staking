@@ -6,9 +6,15 @@ use staking_node_runtime::{
 };
 use sp_consensus_aura::sr25519::{AuthorityId as AuraId};
 use grandpa_primitives::{AuthorityId as GrandpaId};
+use sp_consensus_babe::{AuthorityId as BabeId};
+use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
 use sc_service;
 use sp_runtime::traits::{Verify, IdentifyAccount};
 use sp_runtime::Perbill;
+use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
+use staking_node_runtime::constants::currency::*;
+
+pub use node_primitives::Balance;
 
 
 // Note this is the URL for the telemetry server
@@ -41,7 +47,7 @@ fn session_keys(
 	im_online: ImOnlineId,
 	authority_discovery: AuthorityDiscoveryId,
 ) -> SessionKeys {
-	SessionKeys { grandpa }//, babe, im_online, authority_discovery }
+	SessionKeys { grandpa , babe, im_online, authority_discovery }
 }
 
 
@@ -155,21 +161,21 @@ fn testnet_genesis(initial_authorities: Vec<(AuraId, GrandpaId)>,
 		grandpa: Some(GrandpaConfig {
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		}),
-        pallet_session: Some(SessionConfig {
-            keys: initial_authorities.iter().map(|x| {
-                (x.0.clone(), session_keys(x.2.clone(), x.3.clone(), x.4.clone(), x.5.clone()))
-            }).collect::<Vec<_>>(),
-        }),
-        pallet_staking: Some(StakingConfig {
-            current_era: 0,
-            validator_count: initial_authorities.len() as u32 * 2,
-            minimum_validator_count: initial_authorities.len() as u32,
-            stakers: initial_authorities.iter().map(|x| {
-                (x.0.clone(), x.1.clone(), STASH, StakerStatus::Validator)
-            }).collect(),
-            invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
-            slash_reward_fraction: Perbill::from_percent(10),
-            .. Default::default()
-        }),
+		pallet_session: Some(SessionConfig {
+			keys: initial_authorities.iter().map(|x| {
+				(x.0.clone(), session_keys(x.2.clone(), x.3.clone(), x.4.clone(), x.5.clone()))
+			}).collect::<Vec<_>>(),
+		}),
+		pallet_staking: Some(StakingConfig {
+			current_era: 0,
+			validator_count: initial_authorities.len() as u32 * 2,
+			minimum_validator_count: initial_authorities.len() as u32,
+			stakers: initial_authorities.iter().map(|x| {
+				(x.0.clone(), x.1.clone(), STASH, StakerStatus::Validator)
+			}).collect(),
+			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
+			slash_reward_fraction: Perbill::from_percent(10),
+			.. Default::default()
+		}),
 	}
 }

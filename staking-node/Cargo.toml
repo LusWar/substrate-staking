@@ -42,6 +42,11 @@ sc-client = {  git = "https://github.com/paritytech/substrate.git" }
 staking-node-runtime = { path = "runtime" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git" }
 sc-basic-authority = { git = "https://github.com/paritytech/substrate.git" }
+pallet-im-online = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+sp-consensus-babe = { version = "0.8.0", git = "https://github.com/paritytech/substrate.git" }
+sc-authority-discovery = { version = "2.0.0",  git = "https://github.com/paritytech/substrate.git" }
+sp-authority-discovery = { version = "2.0.0",  git = "https://github.com/paritytech/substrate.git" }
+node-primitives = { version = "2.0.0", git = "https://github.com/paritytech/substrate.git" }
 
 
 [build-dependencies]

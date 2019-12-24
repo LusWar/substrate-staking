@@ -6,6 +6,7 @@
 use sp_runtime::curve::PiecewiseLinear;
 use sp_runtime::traits::OpaqueKeys;
 use node_primitives::Moment;
+use sp_core::u32_trait::{ _2, _4};
 
 // Make the WASM binary available.
 #[cfg(feature = "std")]
@@ -44,7 +45,7 @@ use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
 
 
 pub mod constants;
-use constants::time::*;
+use constants::{time::*, currency::*};
 
 
 /// An index to a block.
@@ -271,6 +272,34 @@ parameter_types! {
 impl pallet_authority_discovery::Trait for Runtime {}
 
 
+type CouncilCollective = pallet_collective::Instance1;
+impl pallet_collective::Trait<CouncilCollective> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+}
+
+
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 1 * DOLLARS;
+	pub const SpendPeriod: BlockNumber = 1 * DAYS;
+	pub const Burn: Permill = Permill::from_percent(50);
+}
+
+impl pallet_treasury::Trait for Runtime {
+	type Currency = Balances;
+	type ApproveOrigin = pallet_collective::EnsureMembers<_4, AccountId, CouncilCollective>;
+	type RejectOrigin = pallet_collective::EnsureMembers<_2, AccountId, CouncilCollective>;
+	type Event = Event;
+	type ProposalRejection = ();
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
+}
+
+
 impl_opaque_keys! {
 	pub struct SessionKeys {
 		pub grandpa: Grandpa,
@@ -319,9 +348,9 @@ impl pallet_staking::Trait for Runtime {
 	type Currency = Balances;
 	type Time = Timestamp;
 	type CurrencyToVote = CurrencyToVoteHandler;
-	type RewardRemainder = ();
+	type RewardRemainder = Treasury;
 	type Event = Event;
-	type Slash = (); // send the slashed funds to the treasury.
+	type Slash = Treasury; // send the slashed funds to the treasury.
 	type Reward = (); // rewards are minted from the void
 	type SessionsPerEra = SessionsPerEra;
 	type BondingDuration = BondingDuration;
@@ -352,6 +381,9 @@ construct_runtime!(
         ImOnline: pallet_im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
         AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config},
 		RandomnessCollectiveFlip: randomness_collective_flip::{Module, Call, Storage},
+		Treasury: pallet_treasury::{Module, Call, Storage, Config, Event<T>},
+		Council: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>},
+
 	}
 );
 

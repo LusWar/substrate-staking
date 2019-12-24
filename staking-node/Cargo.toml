@@ -17,6 +17,7 @@ path = "src/main.rs"
 
 [dependencies]
 futures = "0.3.1"
+serde = { version = "1.0.102", features = ["derive"] }
 futures01 = { package = "futures", version = "0.1.29" }
 hex-literal = "0.2.1"
 ctrlc = { version = "3.1.3", features = ["termination"] }
@@ -49,6 +50,7 @@ sc-authority-discovery = { version = "2.0.0",  git = "https://github.com/parityt
 sp-authority-discovery = { version = "2.0.0",  git = "https://github.com/paritytech/substrate.git" }
 node-primitives = { version = "2.0.0", git = "https://github.com/paritytech/substrate.git" }
 sc-consensus-babe = { version = "0.8", git = "https://github.com/paritytech/substrate.git"  }
+sc-chain-spec = { version = "2.0.0", git = "https://github.com/paritytech/substrate.git" }
 
 
 [build-dependencies]

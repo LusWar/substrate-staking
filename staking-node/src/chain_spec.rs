@@ -1,9 +1,14 @@
-use sp_core::{Pair, Public, crypto::UncheckedInto, sr25519};
+
+use sc_chain_spec::ChainSpecExtension;
+use sp_core::{Pair, Public, sr25519};
+use serde::{Serialize, Deserialize};
 use staking_node_runtime::{
-	AccountId, BalancesConfig, GenesisConfig, GrandpaConfig, SessionConfig,
-	SudoConfig, IndicesConfig, SystemConfig, WASM_BINARY, Signature, StakingConfig,
-	StakerStatus, SessionKeys
+	AuthorityDiscoveryConfig, BabeConfig, BalancesConfig, CouncilConfig, GrandpaConfig,
+	GenesisConfig, ImOnlineConfig, IndicesConfig, SessionConfig, SessionKeys, StakerStatus,
+	StakingConfig, SudoConfig, SystemConfig, WASM_BINARY,
 };
+use staking_node_runtime::Block;
+
 use grandpa_primitives::{AuthorityId as GrandpaId};
 use sp_consensus_babe::{AuthorityId as BabeId};
 use pallet_im_online::sr25519::{AuthorityId as ImOnlineId};
@@ -12,20 +17,26 @@ use sp_runtime::traits::{Verify, IdentifyAccount};
 use sp_runtime::Perbill;
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use staking_node_runtime::constants::currency::*;
-use hex_literal::hex;
 
-pub use node_primitives::Balance;
+pub use node_primitives::{AccountId, Balance, Signature};
 
 
-// Note this is the URL for the telemetry server
-//const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
+/// Node `ChainSpec` extensions.
+///
+/// Additional parameters for some Substrate core modules,
+/// customizable from the chain spec.
+#[derive(Default, Clone, Serialize, Deserialize, ChainSpecExtension)]
+pub struct Extensions {
+	/// Block numbers with known hashes.
+	pub fork_blocks: sc_client::ForkBlocks<Block>,
+}
 
-/// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::ChainSpec<GenesisConfig>;
+/// Specialized `ChainSpec`.
+pub type ChainSpec = sc_service::ChainSpec<
+	GenesisConfig,
+	Extensions,
+>;
 
-/// The chain specification option. This is expected to come in from the CLI and
-/// is little more than one of a number of alternatives which can easily be converted
-/// from a string (`--chain=...`) into a `ChainSpec`.
 #[derive(Clone, Debug)]
 pub enum Alternative {
 	/// Whatever the current runtime is, with just Alice as an auth.
@@ -33,6 +44,32 @@ pub enum Alternative {
 	/// Whatever the current runtime is, with simple Alice/Bob auths.
 	LocalTestnet,
 }
+
+impl Alternative {
+	pub(crate) fn load(self) -> Result<ChainSpec, String> {
+		Ok(match self {
+			Alternative::Development => development_config(),
+			Alternative::LocalTestnet => local_testnet_config(),
+		})
+	}
+
+	pub(crate) fn from(s: &str) -> Option<Self> {
+		match s {
+			"dev" => Some(Alternative::Development),
+			"local" => Some(Alternative::LocalTestnet),
+			_ => None,
+		}
+	}
+}
+
+
+pub fn load_spec(id: &str) -> Result<Option<ChainSpec>, String> {
+	Ok(match Alternative::from(id) {
+		Some(spec) => Some(spec.load()?),
+		None => None,
+	})
+}
+
 
 /// Helper function to generate a crypto pair from seed
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -125,10 +162,8 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AccountId, GrandpaId, Ba
 		sudo: Some(SudoConfig {
 			key: root_key,
 		}),
-		aura: Some(AuraConfig {
-			authorities: endowed_accounts.iter().map(|x| (x.0.clone()))
-				.collect::<Vec<_>>()[..(num_endowed_accounts + 1) / 2].to_vec(),
-			phantom: Default::default(),
+		babe: Some(BabeConfig {
+			authorities: vec![],
 		}),
 		grandpa: Some(GrandpaConfig {
 			authorities: vec![],
@@ -149,5 +184,73 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AccountId, GrandpaId, Ba
 			slash_reward_fraction: Perbill::from_percent(10),
 			..Default::default()
 		}),
+
+		pallet_im_online: Some(ImOnlineConfig {
+			keys: vec![],
+		}),
+
+		pallet_authority_discovery: Some(AuthorityDiscoveryConfig {
+			keys: vec![],
+		}),
+
+		pallet_collective_Instance1: Some(CouncilConfig {
+			members: endowed_accounts.iter().cloned()
+				.collect::<Vec<_>>()[..(num_endowed_accounts + 1) / 2].to_vec(),
+			phantom: Default::default(),
+		}),
+		pallet_treasury: Some(Default::default()),
+
 	}
+}
+
+
+fn development_config_genesis() -> GenesisConfig {
+	testnet_genesis(
+		vec![
+			get_authority_keys_from_seed("Alice"),
+		],
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		None,
+		true,
+	)
+}
+
+/// Development config (single validator Alice)
+pub fn development_config() -> ChainSpec {
+	ChainSpec::from_genesis(
+		"Development",
+		"dev",
+		development_config_genesis,
+		vec![],
+		None,
+		None,
+		None,
+		Default::default(),
+	)
+}
+
+fn local_testnet_genesis() -> GenesisConfig {
+	testnet_genesis(
+		vec![
+			get_authority_keys_from_seed("Alice"),
+			get_authority_keys_from_seed("Bob"),
+		],
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		None,
+		false,
+	)
+}
+
+/// Local testnet config (multivalidator Alice + Bob)
+pub fn local_testnet_config() -> ChainSpec {
+	ChainSpec::from_genesis(
+		"Local Testnet",
+		"local_testnet",
+		local_testnet_genesis,
+		vec![],
+		None,
+		None,
+		None,
+		Default::default(),
+	)
 }

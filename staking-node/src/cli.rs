@@ -5,9 +5,8 @@ use tokio::runtime::Runtime;
 pub use sc_cli::{VersionInfo, IntoExit, error};
 use sc_cli::{display_role, informant, parse_and_prepare, ParseAndPrepare, NoCustom};
 use sc_service::{AbstractService, Roles as ServiceRoles, Configuration};
-use sp_consensus_aura::sr25519::{AuthorityPair as AuraPair};
-use crate::chain_spec;
 use log::info;
+use crate::chain_spec::load_spec;
 
 /// Parse command line arguments into service configuration.
 pub fn run<I, T, E>(args: I, exit: E, version: VersionInfo) -> error::Result<()> where
@@ -15,10 +14,10 @@ pub fn run<I, T, E>(args: I, exit: E, version: VersionInfo) -> error::Result<()>
 	T: Into<std::ffi::OsString> + Clone,
 	E: IntoExit,
 {
-	type Config<T> = Configuration<(), T>;
+	type Config<A, B> = Configuration<(), A, B>;
 	match parse_and_prepare::<NoCustom, NoCustom, _>(&version, "substrate-node", args) {
 		ParseAndPrepare::Run(cmd) => cmd.run(load_spec, exit,
-		|exit, _cli_args, _custom_args, config: Config<_>| {
+		|exit, _cli_args, _custom_args, config: Config<_, _>| {
 			info!("{}", version.name);
 			info!("  version {}", config.full_version());
 			info!("  by {}, 2017, 2018", version.author);
@@ -40,26 +39,19 @@ pub fn run<I, T, E>(args: I, exit: E, version: VersionInfo) -> error::Result<()>
 			}
 		}),
 		ParseAndPrepare::BuildSpec(cmd) => cmd.run::<NoCustom, _, _, _>(load_spec),
-		ParseAndPrepare::ExportBlocks(cmd) => cmd.run_with_builder(|config: Config<_>|
+		ParseAndPrepare::ExportBlocks(cmd) => cmd.run_with_builder(|config: Config<_, _>|
 			Ok(new_full_start!(config).0), load_spec, exit),
-		ParseAndPrepare::ImportBlocks(cmd) => cmd.run_with_builder(|config: Config<_>|
+		ParseAndPrepare::ImportBlocks(cmd) => cmd.run_with_builder(|config: Config<_, _>|
 			Ok(new_full_start!(config).0), load_spec, exit),
-		ParseAndPrepare::CheckBlock(cmd) => cmd.run_with_builder(|config: Config<_>|
+		ParseAndPrepare::CheckBlock(cmd) => cmd.run_with_builder(|config: Config<_, _>|
 			Ok(new_full_start!(config).0), load_spec, exit),
 		ParseAndPrepare::PurgeChain(cmd) => cmd.run(load_spec),
-		ParseAndPrepare::RevertChain(cmd) => cmd.run_with_builder(|config: Config<_>|
+		ParseAndPrepare::RevertChain(cmd) => cmd.run_with_builder(|config: Config<_, _>|
 			Ok(new_full_start!(config).0), load_spec),
 		ParseAndPrepare::CustomCommand(_) => Ok(())
 	}?;
 
 	Ok(())
-}
-
-fn load_spec(id: &str) -> Result<Option<chain_spec::ChainSpec>, String> {
-	Ok(match chain_spec::Alternative::from(id) {
-		Some(spec) => Some(spec.load()?),
-		None => None,
-	})
 }
 
 fn run_until_exit<T, E>(

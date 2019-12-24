@@ -10,6 +10,7 @@ aura = { package = "pallet-aura", git = "https://github.com/paritytech/substrate
 balances = { package = "pallet-balances", git = "https://github.com/paritytech/substrate.git", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate.git", default-features = false }
 grandpa = { package = "pallet-grandpa", git = "https://github.com/paritytech/substrate.git", default-features = false }
+babe = { package = "pallet-babe", version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 indices = { package = "pallet-indices", git = "https://github.com/paritytech/substrate.git", default-features = false }
 randomness-collective-flip = { package = "pallet-randomness-collective-flip", git = "https://github.com/paritytech/substrate.git", default-features = false }
 sudo = { package = "pallet-sudo", git = "https://github.com/paritytech/substrate.git", default-features = false }
@@ -34,11 +35,12 @@ sp-std = { git = "https://github.com/paritytech/substrate.git", default-features
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate.git", default-features = false }
 sp-version = { git = "https://github.com/paritytech/substrate.git", default-features = false }
 sp-staking = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+sp-consensus-babe = { version = "0.8", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+
 
 pallet-staking = { version = "2.0.0", features = ["migrate"], git = "https://github.com/paritytech/substrate.git", default-features = false }
 pallet-staking-reward-curve = { version = "2.0.0",  git = "https://github.com/paritytech/substrate.git" }
 pallet-session = { version = "2.0.0", features = ["historical"], git = "https://github.com/paritytech/substrate.git", default-features = false }
-pallet-babe = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 node-primitives = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 pallet-im-online = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 pallet-authority-discovery = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
@@ -73,7 +75,7 @@ std = [
 	"sp-io/std",
 	"sp-offchain/std",
 	"sp-runtime/std",
-	"pallet-babe/std",
+	"babe/std",
 	"pallet-im-online/std",
 	"sp-staking/std",
 	"pallet-staking/std",

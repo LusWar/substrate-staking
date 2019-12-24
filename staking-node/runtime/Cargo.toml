@@ -42,6 +42,9 @@ pallet-babe = { version = "2.0.0", default-features = false, git = "https://gith
 node-primitives = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 pallet-im-online = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
 pallet-authority-discovery = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+pallet-treasury = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+pallet-collective = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git" }
+
 
 [build-dependencies]
 wasm-builder-runner = { package = "substrate-wasm-builder-runner", git = "https://github.com/paritytech/substrate.git", version = "1.0.4" }
@@ -50,6 +53,8 @@ wasm-builder-runner = { package = "substrate-wasm-builder-runner", git = "https:
 default = ["std"]
 std = [
 	"pallet-authority-discovery/std",
+	"pallet-collective/std",
+	"pallet-treasury/std",
 	"aura/std",
 	"balances/std",
 	"codec/std",

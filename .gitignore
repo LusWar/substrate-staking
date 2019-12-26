@@ -605,3 +605,8 @@ staking-node/target/release/build/wasm-bindgen-shared-fa4b1595fcc565b6/
 staking-node/target/release/deps/
 staking-node/target/release/examples/
 staking-node/target/release/incremental/
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/substrate-staking.iml
+.idea/vcs.xml

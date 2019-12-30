@@ -41,6 +41,8 @@ pub use frame_support::{
 	traits::Randomness,
 	weights::Weight,
 };
+pub use pallet_staking::StakerStatus;
+
 
 /// Constant values used within the runtime.
 pub mod constants;
@@ -180,6 +182,8 @@ impl pallet_authorship::Trait for Runtime {
 
 parameter_types! {
 	pub const DisabledValidatorsThreshold: Perbill = Perbill::from_percent(17);
+	pub const Period: BlockNumber = 1;
+	pub const Offset: BlockNumber = 0;
 }
 
 
@@ -187,7 +191,7 @@ parameter_types! {
 impl pallet_session::Trait for Runtime {
 	type OnSessionEnding = Staking;
 	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
-	type ShouldEndSession = TestShouldEndSession;
+	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
 	type Event = Event;
 	type Keys = opaque::SessionKeys;
 	type ValidatorId = <Self as system::Trait>::AccountId;
